@@ -6,6 +6,12 @@
 ;; private functions later
 (provide (all-defined-out))
 
+(require (only-in srfi/1
+	 lset-intersection
+	 lset-adjoin
+	 ))
+
+
 (define a->s (lambda (a) (car a)))
 (define a->c* (lambda (a) (cadr a)))
 (define a->t (lambda (a) (caddr a)))
@@ -406,22 +412,103 @@
 (define lhs (lambda (pr) (car pr)))
 (define rhs (lambda (pr) (cdr pr)))
 
-(define walk
-  (lambda (x s)
-    (let ((a (assq x s)))
-      (cond
-        (a (let ((u (rhs a)))
-             (if (var? u) (walk u s) u)))
-        (else x)))))
 
-(define walk*
+
+(define (alist-tail-length x s)
+  (let ([a (assq x s)])
+    (if a (length (member a s)) 0))) 
+
+(define walk-circular
+  (lambda (x s)
+    ;(display 'walk-include-circular)
+    (let ([a (assq x s)])
+      (if a 
+	  (let ([result-pos (alist-tail-length x s)]
+		[result x] )
+	    (let loop ([u (rhs a)])
+	      ;(display (list result-pos x))(newline)
+	      (if (var? u)
+		  (let ([u-pos (alist-tail-length u s)])
+		    ;(display u-pos)
+		    (when ( > result-pos u-pos )
+			  (begin
+			    (set! result-pos u-pos)
+			    (set! result u)))
+		    (if (eq? u x) ;;when circular
+			 result
+			 (let ([b (assq u s)])
+			   (if b 
+			       (loop (rhs b))
+			       u))))
+		  u)))
+	  x))))
+
+(define walk walk-circular )
+
+;; (define walk
+;;   (lambda (x s)
+;;     (let ((a (assq x s)))
+;;       (cond
+;;         (a (let ((u (rhs a)))
+;;              (if (var? u) (walk u s) u)))
+;;         (else x)))))
+
+(define walk-circular*
   (lambda (v s)
-    (let ((v (if (var? v) (walk v s) v)))
-      (cond
-        ((var? v) v)
-        ((pair? v)
-         (cons (walk* (car v) s) (walk* (cdr v) s)))
-        (else v)))))
+    ;(display 'walk-circular*)
+    (let (
+	  ;[already-passed-var-lset (if (var? v) (list v) '()) ]
+	  ;[already-passed-var-lset '() ]
+	  ;[previous-result v]
+	  [dummy null]
+	  )
+      (let loop ([u v] 
+		 [already-passed-var-lset 
+		  '()
+		  ;(if (var? v) (list v) '()) 
+		  ] )
+	;(display (list 'loop u already-passed-var-lset ))(newline)
+	(cond
+	 [(var? u)
+	  (set! already-passed-var-lset (lset-adjoin eq? already-passed-var-lset u))
+	  (let ([ w (walk-circular u s)])
+	    (cond
+	     [(var? w) w]
+
+	     [(null? (lset-intersection eq? (flatten w) already-passed-var-lset))
+	      (loop w already-passed-var-lset)
+		    ;(lset-adjoin eq? already-passed-var-lset u))
+	      ]
+
+
+	     ;[(member w already-passed-var-lset) w]
+	     ;[(member w already-passed-var-lset) u]
+	     [else
+	      ;u
+	      `(==> ,u  ,w)
+	      ;(set! already-passed-var-lset (lset-adjoin eq? already-passed-var-lset u))
+	      ;(loop w already-passed-var-lset )
+	      ]
+	     ))]
+        [(pair? u)
+         (cons (loop (car u) already-passed-var-lset) (loop (cdr u) already-passed-var-lset))]
+        (else u))))))
+
+
+
+
+(define walk* walk-circular* )
+
+;; (define walk*
+;;   (lambda (v s)
+;;     ;(display 'walk*)
+;;     (let ((v (if (var? v) (walk v s) v)))
+;;       (cond
+;;         ((var? v) v)
+;;         ((pair? v)
+;;          (cons (walk* (car v) s) (walk* (cdr v) s)))
+;;         (else v)))))
+
 
 (define unify
   (lambda (u v s)
@@ -439,10 +526,16 @@
     (cond
       ((eq? u v) s)      
       ((var? u)
-       (and (or (not (pair? v)) (valid? u v s))
+       (and (or (not (pair? v)) 
+		;; (valid? u v s)
+		#t
+		)
          (cons `(,u . ,v) s)))
       ((var? v)
-       (and (or (not (pair? u)) (valid? v u s))
+       (and (or (not (pair? u)) 
+		;; (valid? v u s)
+		#t
+		)
          (cons `(,v . ,u) s)))
       ((equal? u v) s)
       (else #f))))
@@ -496,6 +589,7 @@
                 (var? (walk (lhs pr) r)))
               t)))))))
 
+
 (define reify-aux
   (lambda (r v c* t)
     (let ((v (walk* v r))
@@ -507,8 +601,16 @@
                     (partition* t)))))
         (cond
           ((and (null? c*) (null? p*)) v)
-          ((null? c*) `(,v . ,p*))
-          (else `(,v (=/= . ,c*) . ,p*)))))))
+          ((null? c*) 
+	   ;; `(,v . ,p*)
+	   `(,v : . ,p*)
+	   )
+          (else 
+	   ;; `(,v (=/= . ,c*) . ,p*)
+	   `(,v : (=/= . ,c*) . ,p*)
+	   ))))))
+
+
 
 (define sorter
   (lambda (ls)
