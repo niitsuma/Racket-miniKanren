@@ -17,13 +17,13 @@ should be
 
      (1 5 (3  (3  (3  (3 ... ))))  7) 
 
-However this includes infinete loop.
-We replace this infinete loop into the following 
+However this list includes infinete loop.
+We replace this infinete loop into the following recursive loop representation
 
      '((1 5 (==> _.0 (3 _.0)) 7))
 
 Here  ` (==> _.0 (3 _.0) ) ` repsesent recursive infinite loop.
-Meaning is ` _.0 ` will replace  ` (3 _.0) `
+Meaning is ` _.0 ` will replace to ` (3 _.0) `
  
 
 In cKanren and miniKanren 
