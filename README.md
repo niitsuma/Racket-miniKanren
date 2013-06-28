@@ -25,7 +25,7 @@ We replace this infinete loop into the following recursive loop representation
 Here  ` (==> _.0 (3 _.0) ) ` repsesent recursive infinite loop.
 Its meaning is 
 
-` (==> _.0 (3 _.0) ) ` is ` _.0 ` and ` _.0 ` will replace to ` (3 _.0) `
+` (==> _.0 (3 _.0) ) ` is ` _.0 ` . And ` _.0 ` will replace to ` (3 _.0) `
  
 
 In cKanren and miniKanren 
