@@ -1,34 +1,62 @@
-Racket-miniKanren
+Racket recursive miniKanren 
 =================
 
-Canonical miniKanren implementation in Racket.
+recursive miniKanren implementation in Racket.
 
-Asumu Takikawa and Sam Tobin-Hochstadt cleaned up William E. Byrd's Super Chobo Racket code, which in turn was based on the Scheme implementation of miniKanren in the paper:
+forked from miniKanren/Racket-miniKanren
+https://github.com/miniKanren/Racket-miniKanren
 
-William E. Byrd, Eric Holk, and Daniel P. Friedman.
-miniKanren, Live and Untagged: Quine Generation via Relational Interpreters (Programming Pearl).
-To appear in the Proceedings of the 2012 Workshop on Scheme and Functional Programming, Copenhagen, Denmark, 2012.
+# Readme:
+    
+     (run* (q) 
+	    (fresh (x)
+		   ( == x `(3 ,x))
+		   ( == q `(1 5 ,x  7))
+		   ))
+should be
+
+     (1 5 (3  (3  (3  (3 ... ))))  7) 
+
+However this includes infinete loop.
+We replace this infinete loop into the following 
+
+     '((1 5 (==> _.0 (3 _.0)) 7))
+
+Here  ` (==> _.0 (3 _.0) ) ` repsesent recursive infinite loop.
+Meaning is ` _.0 ` will replace  ` (3 _.0) `
+ 
+
+In cKanren and miniKanren 
+
+     > (run* (q) 
+	    (fresh (x)
+		   ( == x `(3 ,x))
+		   ( == q `(1 5 ,x  7))
+		   ))
+     '()
+		   
+
+#bugs :
+
+The followings not work
+
+      (run* (q)
+      　　( == q `(3 ,q)
+      　　( == q q)
+      ))
 
 
-CORE LANGUAGE
 
-Logical operators:
-
-==
-fresh
-conde
-
-Interface operators:
-
-run
-run*
+      (run* (q)
+      　　( == q `(3 ,q)
+      　　( =/= q 2)
+      ))
 
 
-EXTENDED LANGUAGE
+      
+# Documented in Japanese:
 
-Constraint operators:
+http://d.hatena.ne.jp/niitsuma/20081113/1372410009
 
-=/=
-symbolo
-numbero
-absento
+
+Hirotaka Niitsuma

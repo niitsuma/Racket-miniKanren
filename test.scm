@@ -206,8 +206,20 @@
 	 '((_.0 (==> _.1 (_.0 _.1))))
 	 "occurs-check run*"
 	 )
+     (schemeunit:check-equal?      
+      (run* (q) 
+	    (fresh (x)
+		   ( == x `(3 ,x))
+		   ( == q `(1 5 ,x  7))
+		   ))
 
+      '((1 5 (==> _.0 (3 _.0)) 7))
+      )
 
 ))
 
 (schemeunit:run-tests mk-cyclic-walk-tests)
+
+
+
+
