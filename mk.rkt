@@ -11,6 +11,48 @@
 ;; 	 lset-adjoin
 ;; 	 ))
 (require racket/dict)
+(require mzlib/defmacro)
+
+;-------common lisp ----------
+(define (cl:some fn lst)
+  (for/or ((i lst))
+  (fn i)))
+;---------
+
+
+;------- on lisp ----------
+(define atom? (compose not pair?))
+(define not-null? (compose not null?))
+
+(define (tsrec rec [base identity] )
+  (letrec ((self (lambda (trees)
+		   (if (cl:some atom? trees)
+		       (if (procedure? base)
+			   (apply base trees)
+			   base)
+		       (rec trees
+			    (lambda ()
+			      (self (map car trees)))
+			    (lambda ()
+			      (self (map cdr trees))))
+		       ))))
+    self))
+
+(define-macro (atsrec rec . base )
+  (if (null? base) (set! base 'it)
+      (set! base (car base)))
+    (let ((lfn (gensym)) (rfn (gensym)))
+      `(tsrec (lambda (it ,lfn ,rfn)
+               (letrec ((left (lambda () (,lfn)))
+                        (right (lambda () (,rfn))))
+                 ,rec))
+             (lambda it ,base))))
+
+(define-macro (ons-trees rec base trees)
+  `((atsrec ,rec ,base) trees))
+
+
+;---------
 
 
 (define a->s (lambda (a) (car a)))
@@ -426,6 +468,7 @@
 
 (define (recursive-representation? l)
   (if (and (pair? l) (eq? (car l) '==>) (pair? (cdr l) ) (var? (cadr l) )) (cadr l)  #f))
+(define (make-recursive-representation x x1 )  (list '==> x x1))
 
 
 (define (walk-circular-var? x s)
@@ -479,9 +522,8 @@
 ;;         (else x)))))
 
 (define walk-circular*
-  (lambda (v s)
+  (lambda (v s [make-recursive-representation make-recursive-representation])
     (let walk-circular* ([v v] [s s] [already-passed-var-lset '()] )
-      ;; (display (list 'loop u already-passed-var-lset ))(newline)
       (let ([v (if (var? v) (walk-within-var v s) v)])
       (cond
        [(member v already-passed-var-lset) v]
@@ -492,7 +534,7 @@
 	     [else
 	      (let ([w (walk-circular* (dict-ref s v) s (cons v already-passed-var-lset))])
 		(if (occurs-check v w s)			
-		    `(==> ,v  ,w)
+		    (make-recursive-representation v w)
 		    w)) ] )
 	    v)]	       
        [(pair? v)
@@ -515,16 +557,57 @@
 ;;         (else v)))))
 
 
-(define unify
+
+(define unify-ons-trees
   (lambda (u v s)
-    (let ((u (if (var? u) (walk u s) u))
-          (v (if (var? v) (walk v s) v)))
-      (cond
-        ((and (pair? u) (pair? v))
-         (let ((s (unify (car u) (car v) s)))
-           (and s
-             (unify (cdr u) (cdr v) s))))
-        (else (unify-nonpair u v s))))))
+    (let* ([u1 (walk-circular* u s (lambda (x y) x))] 
+	   [v1 (walk-circular* v s (lambda (x y) x))]
+	   [trees (list u1 v1)]
+	   )
+
+      (ons-trees
+	 (cond 
+	  [(not s) #f]
+	  ;[(apply equal? it) s]
+	  [else
+	       (set! s (left) )	       
+	       (set! s (right) )
+	       s
+	       ]
+	  )
+
+	 (apply 
+	  (lambda (u v)
+	    (cond
+	     [(eq? u v) s]
+	     [(var? u)
+	      (cons `(,u . ,v) s)]
+	     [(var? v)
+	      (cons `(,v . ,u) s)]
+	     [(equal? u v)]
+	     [else #f]
+	     ))
+	  it)
+	 
+	 trees
+
+	 )
+)))
+
+
+(define unify unify-ons-trees)
+;(define unify unify-org)
+
+;; (define unify
+;;   (lambda (u v s)
+;;     (let ((u (if (var? u) (walk u s) u))
+;;           (v (if (var? v) (walk v s) v)))
+;;       (cond
+;;         ((and (pair? u) (pair? v))
+;;          (let ((s (unify (car u) (car v) s)))
+;;            (and s
+;;              (unify (cdr u) (cdr v) s))))
+;;         (else (unify-nonpair u v s))))))
 
 (define unify-nonpair
   (lambda (u v s)

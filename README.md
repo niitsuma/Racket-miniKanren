@@ -40,20 +40,17 @@ In cKanren and miniKanren
 
 #bugs :
 
-The followings not work
+The followings bugs fixed
 
       (run* (q)
       　　( == q `(3 ,q)
       　　( == q q)
       ))
 
-
-
       (run* (q)
       　　( == q `(3 ,q)
       　　( =/= q 2)
       ))
-
 
       
 # Documented in Japanese:
