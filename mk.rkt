@@ -6,10 +6,11 @@
 ;; private functions later
 (provide (all-defined-out))
 
-(require (only-in srfi/1
-	 lset-intersection
-	 lset-adjoin
-	 ))
+;; (require (only-in srfi/1
+;; 	 lset-intersection
+;; 	 lset-adjoin
+;; 	 ))
+(require racket/dict)
 
 
 (define a->s (lambda (a) (car a)))
@@ -418,30 +419,54 @@
   (let ([a (assq x s)])
     (if a (length (member a s)) 0))) 
 
+(define (dict-tail-length s x)
+  (cond 
+   [(member x (dict-keys s)) => (lambda (l) (length l))]
+   [else (dict-count s)]))
+
+(define (recursive-representation? l)
+  (if (and (pair? l) (eq? (car l) '==>) (pair? (cdr l) ) (var? (cadr l) )) (cadr l)  #f))
+
+
+(define (walk-circular-var? x s)
+  (let walk-circular-var? ([x x] [s s] [result-pos (dict-tail-length s x)] [result x])
+    (cond
+     [(dict-has-key? s x)
+      (let ([u (dict-ref s x)])
+	(if (var? u)
+	    (if (eq? u result) ;;when circular
+		result
+		(let ([u-pos (dict-tail-length s u)])
+		  (if ( > result-pos u-pos )
+		      (walk-circular-var? u s u-pos u)
+		      (walk-circular-var? u s result-pos result))))
+	      #f))]
+     [else #f] )))
+
+(define (walk-within-var x s)
+  (cond 
+   [(walk-circular-var? x s) => identity]
+   [(dict-has-key? s x)
+     (let ([u (dict-ref s x)])
+       (if (var? u)
+	   (walk-within-var u s)
+	   x))]
+   [else x]))
+
 (define walk-circular
   (lambda (x s)
-    ;(display 'walk-include-circular)
-    (let ([a (assq x s)])
-      (if a 
-	  (let ([result-pos (alist-tail-length x s)]
-		[result x] )
-	    (let loop ([u (rhs a)])
-	      ;(display (list result-pos x))(newline)
-	      (if (var? u)
-		  (let ([u-pos (alist-tail-length u s)])
-		    ;(display u-pos)
-		    (when ( > result-pos u-pos )
-			  (begin
-			    (set! result-pos u-pos)
-			    (set! result u)))
-		    (if (eq? u x) ;;when circular
-			 result
-			 (let ([b (assq u s)])
-			   (if b 
-			       (loop (rhs b))
-			       u))))
-		  u)))
-	  x))))
+    ;; (display 'walk-circular)
+    (cond 
+     [(walk-circular-var? x s) => identity]
+     [(dict-has-key? s x)
+      (let ([u (dict-ref s x)])
+	(if (var? u)
+	    (walk-circular u s)
+	    ;x
+	    u
+	    ))]
+     [else x])))
+
 
 (define walk walk-circular )
 
@@ -455,46 +480,26 @@
 
 (define walk-circular*
   (lambda (v s)
-    ;(display 'walk-circular*)
-    (let (
-	  ;[already-passed-var-lset (if (var? v) (list v) '()) ]
-	  ;[already-passed-var-lset '() ]
-	  ;[previous-result v]
-	  [dummy null]
-	  )
-      (let loop ([u v] 
-		 [already-passed-var-lset 
-		  '()
-		  ;(if (var? v) (list v) '()) 
-		  ] )
-	;(display (list 'loop u already-passed-var-lset ))(newline)
-	(cond
-	 [(var? u)
-	  (set! already-passed-var-lset (lset-adjoin eq? already-passed-var-lset u))
-	  (let ([ w (walk-circular u s)])
+    (let walk-circular* ([v v] [s s] [already-passed-var-lset '()] )
+      ;; (display (list 'loop u already-passed-var-lset ))(newline)
+      (let ([v (if (var? v) (walk-within-var v s) v)])
+      (cond
+       [(member v already-passed-var-lset) v]
+       [(dict-has-key? s v)
+	(if (var? v)
 	    (cond
-	     [(var? w) w]
-
-	     [(null? (lset-intersection eq? (flatten w) already-passed-var-lset))
-	      (loop w already-passed-var-lset)
-		    ;(lset-adjoin eq? already-passed-var-lset u))
-	      ]
-
-
-	     ;[(member w already-passed-var-lset) w]
-	     ;[(member w already-passed-var-lset) u]
+	     [(walk-circular-var? v s) => identity]
 	     [else
-	      ;u
-	      `(==> ,u  ,w)
-	      ;(set! already-passed-var-lset (lset-adjoin eq? already-passed-var-lset u))
-	      ;(loop w already-passed-var-lset )
-	      ]
-	     ))]
-        [(pair? u)
-         (cons (loop (car u) already-passed-var-lset) (loop (cdr u) already-passed-var-lset))]
-        (else u))))))
-
-
+	      (let ([w (walk-circular* (dict-ref s v) s (cons v already-passed-var-lset))])
+		(if (occurs-check v w s)			
+		    `(==> ,v  ,w)
+		    w)) ] )
+	    v)]	       
+       [(pair? v)
+	  (cons
+	   (walk-circular* (car v) s already-passed-var-lset) 
+	   (walk-circular* (cdr v) s already-passed-var-lset))]
+       [else v])))))
 
 
 (define walk* walk-circular* )
@@ -544,15 +549,42 @@
   (lambda (x v s)
     (not (occurs-check x v s))))
 
-(define occurs-check
+;; (define occurs-check
+;;   (lambda (x v s)
+;;     (let ((v (if (var? v) (walk v s) v)))
+;;       (cond
+;;         ((var? v) (eq? v x))
+;;         ((pair? v) 
+;;          (or (occurs-check x (car v) s)
+;;              (occurs-check x (cdr v) s)))
+;;         (else #f)))))  
+
+(define occurs-check ;; contain x in list v ?
   (lambda (x v s)
-    (let ((v (if (var? v) (walk v s) v)))
-      (cond
-        ((var? v) (eq? v x))
-        ((pair? v) 
-         (or (occurs-check x (car v) s)
-             (occurs-check x (cdr v) s)))
-        (else #f)))))  
+    (let occurs-check ([x x] [v v] [s s] [already-passed-var-lset '()])      
+      ;; (display (list x v s already-passed-var-lset))
+      ;(display already-passed-var-lset)
+      (cond 
+       [(eq? v x) #t]
+       [(member v already-passed-var-lset) #f]
+       [(dict-has-key? s v)
+	(if (var? v)
+	    (occurs-check x (dict-ref s v) s (cons v already-passed-var-lset))
+	    (occurs-check x (dict-ref s v) s already-passed-var-lset)
+	    )]
+
+       ;;need check
+       [(recursive-representation? v) => 
+       	(lambda (u) (occurs-check x u s 
+       				  (cons u already-passed-var-lset)
+       				  )) ]
+
+       [(pair? v)
+	  (or (occurs-check x (car v) s already-passed-var-lset)
+	      (occurs-check x (cdr v) s already-passed-var-lset))]
+       [else #f]))))
+
+
 
 (define reify-s
   (lambda (v)
