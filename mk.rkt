@@ -581,9 +581,11 @@
 	    (cond
 	     [(eq? u v) s]
 	     [(var? u)
-	      (cons `(,u . ,v) s)]
+	      (if (dict-has-key? s u) #f
+		  (cons `(,u . ,v) s))]
 	     [(var? v)
-	      (cons `(,v . ,u) s)]
+	      (if (dict-has-key? s v) #f
+		  (cons `(,v . ,u) s))]
 	     [(equal? u v)]
 	     [else #f]
 	     ))
