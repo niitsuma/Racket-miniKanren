@@ -54,7 +54,7 @@ Now the following bugs fixed
 
 # Related topics
   
-another solution to avoid infinet loop `(run* (q) (membero 3 q) ) ` 
+Another solution can avoid infinite loop `(run* (q) (membero 3 q) ) ` 
 
 https://github.com/niitsuma/miniKanren-var-tailed-list
   
