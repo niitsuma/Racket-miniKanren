@@ -6,7 +6,7 @@ recursive miniKanren implementation in Racket.
 forked from miniKanren/Racket-miniKanren
 https://github.com/miniKanren/Racket-miniKanren
 
-# Readme:
+# Readme
     
      (run* (q) 
 	    (fresh (x)
@@ -38,9 +38,9 @@ In cKanren and miniKanren
      '()
 		   
 
-#bugs :
+# bugs 
 
-The followings bugs fixed
+Now the following bugs fixed
 
       (run* (q)
       　　( == q `(3 ,q)
@@ -52,7 +52,14 @@ The followings bugs fixed
       　　( =/= q 2)
       ))
 
+# Related topics
+  
+another solution to avoid infinet loop `(run* (q) (membero 3 q) ) ` 
+
+https://github.com/niitsuma/miniKanren-var-tailed-list
+  
       
+
 # Documented in Japanese:
 
 http://d.hatena.ne.jp/niitsuma/20081113/1372410009
