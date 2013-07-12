@@ -2,6 +2,8 @@
 
 (require "mk.rkt")
 
+(require "mk-org.rkt")
+
 (require (prefix-in schemeunit: rackunit))
 (require (prefix-in schemeunit: rackunit/text-ui))
 
@@ -222,3 +224,106 @@
 
 
 
+
+
+
+(run* (q)
+      (fresh (x y)
+	     (== y q)
+	     (== q `(,x ,y ))
+	     (=/= q 3)
+	     ))
+
+(run* (q)
+      (fresh (x y)
+	     (=/= q 3)
+	     (== y q)
+	     (== q `(,x ,y ))
+
+	     ))
+
+
+(run* (q)
+      (fresh (x y)
+	     (=/= x 3)
+	     (== y q)
+	     (== q `(,x ,y ))
+	     ))
+
+(run* (q)
+      (fresh (x y)
+	     (== y q)
+	     (== q `(,x ,y ))
+	     (=/= x 3)
+	     (== x 1)
+	     ))
+
+
+(run* (q)
+      (fresh (x y)
+	     (== y q)
+	     (== q `(,x ,y ))
+	     (== q 3)
+	     ))
+
+(run* (q)
+      (conde
+       [(== q 2)]
+       [(== q 4)]
+       )
+)
+
+
+
+(run* (q)
+      (fresh (x y)
+	     (== `(,x . ,y ) q)
+	     ))
+
+(define appendo
+  (lambda (l s out)
+    (display (list 'appendo l s out))(newline)
+    (conde
+      [(== '() l) (== s out)]
+      [(fresh (a d res)
+         (== `(,a . ,d) l)
+         (== `(,a . ,res) out)
+         (appendo d s res))])))
+
+(run* (q) (appendo '() '(d e) q))
+(run* (q) (appendo '(a) '(d e) q))
+(run* (q) (appendo '(a b) '(d e) q))
+((a b) (d e) #(q))
+(#(d) (d e) #(res))
+(#(d) (d e) #(res))
+'()
+
+(run* (q) (appendo '(1 2) '(3 4) q))
+
+
+(run* (q) 
+      (fresh (d1 res1)
+	     (appendo d1 '(3 4) res1)
+	     (== q (list d1 res1))
+	     ))
+
+
+
+(run* (q) (appendo '(a b c) '(d e) q))
+
+(run* (q) (appendo q '(d e) '(a b c d e)))
+
+(run* (q) (appendo '(a b c) q '(a b c d e)))
+
+(run 5 (q)
+  (fresh (l s out)    
+    (appendo l s out)
+    (== `(,l ,s ,out) q)))
+
+
+(run* (q)
+      (fresh (x y)
+	     (== `(,x . ,y ) q)
+	     (fresh (u v)
+		    (== y `(,u . ,v ) )
+	     )))

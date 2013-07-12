@@ -1,10 +1,12 @@
 #lang racket
 
-(require "racket-compat.rkt")
+
 
 ;; all defined for now, but should avoid exporting
 ;; private functions later
 (provide (all-defined-out))
+
+(require "racket-compat.rkt")
 
 ;; (require (only-in srfi/1
 ;; 	 lset-intersection
@@ -450,7 +452,8 @@
 
 (define fail (== #f #t))
 
-(define var (lambda (dummy) (vector dummy)))
+;(define var (lambda (dummy) (vector dummy)))
+(define var (lambda (dummy) (vector (gensym dummy))))
 (define var? (lambda (x) (vector? x)))
 (define lhs (lambda (pr) (car pr)))
 (define rhs (lambda (pr) (cdr pr)))
@@ -544,38 +547,50 @@
        [else v])))))
 
 
+
+
+(define walk-org*
+  (lambda (v s)
+    ;(display 'walk*)
+    (let ((v (if (var? v) (walk v s) v)))
+      (cond
+        ((var? v) v)
+        ((pair? v)
+         (cons (walk* (car v) s) (walk* (cdr v) s)))
+        (else v)))))
+
 (define walk* walk-circular* )
-
-;; (define walk*
-;;   (lambda (v s)
-;;     ;(display 'walk*)
-;;     (let ((v (if (var? v) (walk v s) v)))
-;;       (cond
-;;         ((var? v) v)
-;;         ((pair? v)
-;;          (cons (walk* (car v) s) (walk* (cdr v) s)))
-;;         (else v)))))
-
-
+;(define walk* walk-org* )
 
 (define unify-ons-trees
   (lambda (u v s)
+    ;(newline)(display (list 'unify u v s ))(newline)
+
     (let* ([u1 (walk-circular* u s (lambda (x y) x))] 
 	   [v1 (walk-circular* v s (lambda (x y) x))]
 	   [trees (list u1 v1)]
 	   )
+      ;(newline) 
+      ;(display (list 'unify-ons-trees u1 v1) )(newline) 
 
       (ons-trees
+
+       ;(begin 
+	; (display (list 'rec it s) ) 
 	 (cond 
 	  [(not s) #f]
-	  ;[(apply equal? it) s]
+	  [(apply equal? it) s]
+	  ;[(cl:some recursive-representation? it) s ]
 	  [else
 	       (set! s (left) )	       
 	       (set! s (right) )
 	       s
 	       ]
 	  )
+	 ;)
 
+       ;(begin 
+	;(display (list 'base it) ) 
 	 (apply 
 	  (lambda (u v)
 	    (cond
@@ -590,26 +605,32 @@
 	     [else #f]
 	     ))
 	  it)
+	 ;)
 	 
 	 trees
 
 	 )
+
+
+
 )))
 
+
+(define unify-org
+  (lambda (u v s)
+    (display (list 'unify u v s ))(newline)
+    (let ((u (if (var? u) (walk u s) u))
+          (v (if (var? v) (walk v s) v)))
+      (cond
+        ((and (pair? u) (pair? v))
+         (let ((s (unify (car u) (car v) s)))
+           (and s
+             (unify (cdr u) (cdr v) s))))
+        (else (unify-nonpair u v s))))))
 
 (define unify unify-ons-trees)
 ;(define unify unify-org)
 
-;; (define unify
-;;   (lambda (u v s)
-;;     (let ((u (if (var? u) (walk u s) u))
-;;           (v (if (var? v) (walk v s) v)))
-;;       (cond
-;;         ((and (pair? u) (pair? v))
-;;          (let ((s (unify (car u) (car v) s)))
-;;            (and s
-;;              (unify (cdr u) (cdr v) s))))
-;;         (else (unify-nonpair u v s))))))
 
 (define unify-nonpair
   (lambda (u v s)
