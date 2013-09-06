@@ -7,4 +7,5 @@
 (define (my-sort comp ls)
   (sort ls comp))
 
-(define datum->string ~a)
+;(define datum->string ~a)
+(define (datum->string x) (format "~a" x))

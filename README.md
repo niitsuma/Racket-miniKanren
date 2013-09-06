@@ -36,21 +36,76 @@ In cKanren and miniKanren
 		   ( == q `(1 5 ,x  7))
 		   ))
      '()
-		   
+	
+# Flourier Series Expansion
+
+Any cyclic list can represent as 
+
+
+    (run5 (q)
+    	    (fresh (r s)
+	     (appendo s r r)	  
+	     (== q r)	     ))
+     >      
+     '(_.0
+     (_.0 ==> _.1 (_.0 . _.1))
+     (_.0 _.1 ==> _.2 (_.0 _.1 . _.2))
+     (_.0 _.1 _.2 ==> _.3 (_.0 _.1 _.2 . _.3))
+     (_.0 _.1 _.2 _.3 ==> _.4 (_.0 _.1 _.2 _.3 . _.4)))
+
+Meaning of these results are
+    
+     '(
+       (_.0 )
+       (_.0 _.0 _.0  ...   )
+       (_.0 _.1  _.0 _.1  _.0 _.1 ... )
+       (_.0 _.1 _.2   _.0 _.1 _.2 _.0 _.1 _.2  ... )
+       (_.0 _.1 _.2 _.3  _.0 _.1 _.2 _.3   _.0 _.1 _.2 _.3  ... )
+       )
+       
+Using this, we can detect any cyclic pattern 
+      
+      
+      (run5 (q)
+      	    (fresh (r s t)
+	    	    (appendo s r r)
+	     	    (appendo '(1 2 1 2 1 2 1 2 1 2 1 2) t r)		    
+		    (== q s)  ))
+
+
+      > '(
+          () 
+	  (1 2) 
+          (1 2 1 2) 
+          (1 2 1 2 1 2) 
+          (1 2 1 2 1 2 1 2)
+	  )
+
+Not only number, any cyclic data can be detected 
+
+
+    (run3 (q)
+    	    (fresh (r s t)
+	       (appendo s r r)
+	       (appendo '(for (gensym) in "abcd"  for (gensym) in "abcd" for (gensym) in "abcd"  ) t r)
+
+	     (== q s)
+	     ))
+
+    > '(
+       () 
+       (for (gensym) in "abcd") 
+       (for (gensym) in "abcd" for (gensym) in "abcd")
+       )
+
+
+
+	   
 
 # bugs 
 
-Now the following bugs fixed
 
-      (run* (q)
-      　　( == q `(3 ,q)
-      　　( == q q)
-      ))
 
-      (run* (q)
-      　　( == q `(3 ,q)
-      　　( =/= q 2)
-      ))
 
 # Related topics
   
@@ -60,7 +115,7 @@ https://github.com/niitsuma/miniKanren-var-tailed-list
   
       
 
-# Documented in Japanese:
+# Document in Japanese:
 
 http://d.hatena.ne.jp/niitsuma/20081113/1372410009
 
