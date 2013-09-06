@@ -56,7 +56,7 @@ Arbitrary cyclic list can represent as
 Meaning of these results are
     
      '(
-       (_.0 )
+       _.0 xf
        (_.0 _.0 _.0  ...   )
        (_.0 _.1  _.0 _.1  _.0 _.1 ... )
        (_.0 _.1 _.2   _.0 _.1 _.2  _.0 _.1 _.2  ... )
@@ -81,8 +81,23 @@ Using this, we can detect Arbitrary cyclic pattern
           (1 2 1 2 1 2 1 2)
 	  )
 
-` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... 
+` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... . 
 This expansion is same to Fourier series expansion.
+Also can much as the following case
+
+     (run6 (q)
+     	(fresh (r s t)
+	    (appendo s r r) (pairo s)
+	    (appendo '(1 2 3 4 1 2 3 4 1 2 3) t r)		    	    
+	    (== q s)	    ))
+     > '(
+     	 (1 2 3 4)
+ 	 (1 2 3 4 1 2 3 4)
+  	 (1 2 3 4 1 2 3 4 1 2 3)
+  	 (1 2 3 4 1 2 3 4 1 2 3 _.0)
+  	 (1 2 3 4 1 2 3 4 1 2 3 _.0 _.1))
+
+
 
 
 Not only number, any cyclic data can be detected 
