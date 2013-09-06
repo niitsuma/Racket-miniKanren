@@ -82,8 +82,8 @@ Using this, we can detect Arbitrary cyclic pattern
 	  )
 
 ` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... . 
-This expansion is same to Fourier series expansion.
-Also can much as the following case
+This expansion is correspond to Fourier series expansion.
+Also can much following case.
 
      (run6 (q)
      	(fresh (r s t)
