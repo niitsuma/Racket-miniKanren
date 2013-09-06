@@ -39,7 +39,7 @@ In cKanren and miniKanren
 	
 # Fourier series expansion
 
-Any cyclic list can represent as 
+Arbitrary cyclic list can represent as 
 
 
     (run5 (q)
@@ -59,11 +59,11 @@ Meaning of these results are
        (_.0 )
        (_.0 _.0 _.0  ...   )
        (_.0 _.1  _.0 _.1  _.0 _.1 ... )
-       (_.0 _.1 _.2   _.0 _.1 _.2 _.0 _.1 _.2  ... )
+       (_.0 _.1 _.2   _.0 _.1 _.2  _.0 _.1 _.2  ... )
        (_.0 _.1 _.2 _.3  _.0 _.1 _.2 _.3   _.0 _.1 _.2 _.3  ... )
        )
        
-Using this, we can detect any cyclic pattern 
+Using this, we can detect Arbitrary cyclic pattern 
       
       
       (run5 (q)
@@ -75,7 +75,7 @@ Using this, we can detect any cyclic pattern
 
       > '(
           () 
-	  (1 2) 
+          (1 2) 
           (1 2 1 2) 
           (1 2 1 2 1 2) 
           (1 2 1 2 1 2 1 2)
