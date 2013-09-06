@@ -81,6 +81,10 @@ Using this, we can detect Arbitrary cyclic pattern
           (1 2 1 2 1 2 1 2)
 	  )
 
+` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... 
+This expansion is same to Fourier series expansion.
+
+
 Not only number, any cyclic data can be detected 
 
 
