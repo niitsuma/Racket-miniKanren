@@ -85,17 +85,17 @@ Using this, we can detect Arbitrary cyclic pattern
 This expansion is correspond to Fourier series expansion.
 Also can much following case.
 
-     (run6 (q)
+     (run5 (q)
      	(fresh (r s t)
 	    (appendo s r r) (pairo s)
 	    (appendo '(1 2 3 4 1 2 3 4 1 2 3) t r)		    	    
 	    (== q s) ))
      > '(
          (1 2 3 4)
- 	 (1 2 3 4 1 2 3 4)
-  	 (1 2 3 4 1 2 3 4 1 2 3)
-  	 (1 2 3 4 1 2 3 4 1 2 3 _.0)
-  	 (1 2 3 4 1 2 3 4 1 2 3 _.0 _.1))
+         (1 2 3 4 1 2 3 4)
+         (1 2 3 4 1 2 3 4 1 2 3)
+         (1 2 3 4 1 2 3 4 1 2 3 _.0)
+         (1 2 3 4 1 2 3 4 1 2 3 _.0 _.1))
 
 
 
