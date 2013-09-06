@@ -56,7 +56,7 @@ Arbitrary cyclic list can represent as
 Meaning of these results are
     
      '(
-       _.0 xf
+       _.0 
        (_.0 _.0 _.0  ...   )
        (_.0 _.1  _.0 _.1  _.0 _.1 ... )
        (_.0 _.1 _.2   _.0 _.1 _.2  _.0 _.1 _.2  ... )
@@ -70,7 +70,7 @@ Using this, we can detect Arbitrary cyclic pattern
       	    (fresh (r s t)
 	    	    (appendo s r r)
 	     	    (appendo '(1 2 1 2 1 2 1 2 1 2 1 2) t r)		    
-		    (== q s)  ))
+		    (== q s) ))
 
 
       > '(
@@ -89,9 +89,9 @@ Also can much as the following case
      	(fresh (r s t)
 	    (appendo s r r) (pairo s)
 	    (appendo '(1 2 3 4 1 2 3 4 1 2 3) t r)		    	    
-	    (== q s)	    ))
+	    (== q s) ))
      > '(
-     	 (1 2 3 4)
+         (1 2 3 4)
  	 (1 2 3 4 1 2 3 4)
   	 (1 2 3 4 1 2 3 4 1 2 3)
   	 (1 2 3 4 1 2 3 4 1 2 3 _.0)
