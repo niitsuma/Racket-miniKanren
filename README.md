@@ -83,7 +83,7 @@ Using this, we can detect Arbitrary cyclic pattern
 
 ` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... . 
 This expansion is correspond to Fourier series expansion.
-Also can much following boundary condition.
+Also can detect with following boundary condition.
 
      (run5 (q)
      	(fresh (r s t)
