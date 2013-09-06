@@ -135,3 +135,11 @@
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (circular-listo x o) (appendo x o o))
+(define (truncated-circular-listo x o)
+  (fresh (y z)
+	 (pairo x)
+	 (circular-listo x z)
+	 (appendo o y z) ))

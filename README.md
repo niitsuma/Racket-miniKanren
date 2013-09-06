@@ -83,7 +83,7 @@ Using this, we can detect Arbitrary cyclic pattern
 
 ` '(1 2 1 2 1 2 1 2 1 2 1 2) ` is repeat of ` () ` or  ` (1 2) `   or  ` (1 2 1 2) ` ... . 
 This expansion is correspond to Fourier series expansion.
-Also can much following case.
+Also can much following boundary condition.
 
      (run5 (q)
      	(fresh (r s t)
@@ -98,33 +98,34 @@ Also can much following case.
          (1 2 3 4 1 2 3 4 1 2 3 _.0 _.1))
 
 
+The following functions give same result.
+
+        (define (circular-listo x o ) (appendo x o o))
+        (define (truncated-circular-listo x o)
+          (fresh (y z)
+        	 (pairo x)
+        	 (circular-listo x z)
+        	 (appendo o y z)  ))
+        (run5 (q) (truncated-circular-listo q '(1 2 3 4 1 2 3 4 1 2 3)) )
+
 
 
 Not only number, any cyclic data can be detected 
 
 
-    (run3 (q)
-    	    (fresh (r s t)
-	       (appendo s r r)
-	       (appendo '(for (gensym) in "abcd"  for (gensym) in "abcd" for (gensym) in "abcd"  ) t r)
-
-	     (== q s)
-	     ))
+    (run2 (q)
+      (truncated-circular-listo q
+        '(for (gensym) in "abcd"  for (gensym) in "abcd" for (gensym) in "abcd"  ) 
+     ))
 
     > '(
-       () 
        (for (gensym) in "abcd") 
        (for (gensym) in "abcd" for (gensym) in "abcd")
        )
 
 
 
-	   
-
-# bugs 
-
-
-
+	 
 
 # Related topics
   
