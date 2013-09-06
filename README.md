@@ -37,7 +37,7 @@ In cKanren and miniKanren
 		   ))
      '()
 	
-# Flourier Series Expansion
+# Fourier series expansion
 
 Any cyclic list can represent as 
 
