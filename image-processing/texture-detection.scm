@@ -54,7 +54,7 @@
  ;;  (100 50 0 100 50 0 100 50))
 
 
-;; extract itexutre pattern  from mage : lst-image  
+;; extract texutre pattern  from the image (lst-img)
  (run2 (q) 
 	(fresh (y)
 	 (truncated-circular-listo y lst-img)
@@ -75,7 +75,7 @@
 
 ;; save image to file
 
-;; list convert byte-strgins
+;; list convert to byte-strings
 (define buffer 
   ;(make-bytes (* width height n-color)))  ;; alpha, red, green, blue
   (list->bytes
@@ -88,7 +88,7 @@
 )
 
 
-;;byte-strgins convert to bitmap image
+;;byte-strings convert to bitmap image
 
 (send dc set-argb-pixels 0 0 width height buffer)
 ;(send dc get-argb-pixels 0 0 width height buffer)
@@ -96,7 +96,7 @@
 ;;save image
 (send bm save-file "rect2.png" 'png)
 
-
+;;show image (on DrRacket)
 bm
 
 
