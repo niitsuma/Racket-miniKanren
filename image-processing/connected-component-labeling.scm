@@ -82,7 +82,8 @@
 (newline)
 
 
-;;Same and more compact description
+;; Same to prev run
+;; but more compact description using builde-nest 
 ;; loop
 ;; for i ( for j ( for di (for dj ....
 ;; ==> (builde-nest (list (sub1 height) (sub1 width) 2 2) ...
