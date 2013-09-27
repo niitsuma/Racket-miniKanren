@@ -143,3 +143,169 @@
 	 (pairo x)
 	 (circular-listo x z)
 	 (appendo o y z) ))
+
+
+(define mapo
+  (lambda (fo ls q)
+    (conde
+      [(nullo ls ) (== q '())]
+      [(fresh (a d a^ d^)
+          (conso a  d ls)
+          (conso a^ d^ q)
+          (fo a a^)
+          (mapo fo d d^))])))
+
+
+(define (builde n f)
+  (let loop ([m 0])
+    (if (>= m n) 
+	succeed	       
+	(fresh ()
+	       (f m)
+	       (loop (add1 m)) ) )))
+
+
+;; (let ([vs (build-list 3 var)])
+;;   (run* (q)
+;; 	(builde
+;; 	 3
+;; 	 (lambda (i) 
+;; 	   (display i)
+;; 	   (== (list-ref vs i) i)
+;; 	   ;; (== q i)
+;; 	   ))
+;; 	(== q vs)
+;; 	)
+;; )  
+;; > '((0 1 2))
+
+
+(define (build2e n m f)
+  (builde
+   n
+   (lambda (i)
+     (builde 
+      m
+      (lambda (j)
+	(f i j))))))
+   
+;; (let ([vs (build-list 6 var)])
+;;   (run* 
+;;    (q)
+;;    (build2e 
+;;     2 3
+;;     (lambda (i j)
+;;       (display (list i j (+ (* i 3) j )))
+;;       (== 
+;;        (list-ref vs (+ (* i 3) j ) ) 
+;;        (+ (* i 3) j ))
+;;       ))
+;;    (== q vs)
+;;    )
+;;   )
+;; 
+;;  >   '((0 1 2 3 4 5))
+
+
+(define (builde-nest n-list f)
+  (let loop ([n-lst n-list] [i-lst '()] )
+    ;(display (list n-list i-lst))
+    (if (null? n-lst)
+	(apply f (reverse i-lst))
+	(let ([m (car n-lst)])
+	  (builde
+	   m
+	   (lambda (i)
+	     (loop (cdr n-lst) (cons i i-lst))))))))
+
+
+;; (let ([vs (build-list 6 var)])
+;;   (run* 
+;;    (q)
+;;    (builde-nest
+;;     '(2 3)
+;;     (lambda (i j)
+;;       ;(display (list i j (+ (* i 3) j )))
+;;       (== 
+;;        (list-ref vs (+ (* i 3) j ) ) 
+;;        (+ (* i 3) j ))
+;;       ))
+;;    (== q vs)
+;;    )
+;;   )
+ 
+;;  >   '((0 1 2 3 4 5))
+
+
+
+(define for-eacho
+  (lambda (fo ls)
+    (conde
+      [(nullo ls )]
+      [(fresh (a d )
+          (conso a  d ls)
+          (fo a)
+          (for-eacho fo d))])))
+
+;(run* (q) (for-eacho (lambda (x) (scm?->ck number? x)) '(1 2 3)))
+;(run* (q) (for-eacho (lambda (x) (scm?->ck number? x)) '(1 2 a)))
+
+
+(define (applye-nargs f args n)
+  (let ([vs  (build-list n var )])
+    (fresh ()
+	   (== vs args)
+	   (apply f vs))))
+	   
+(define for-eache
+  (lambda (fo . lss)
+    (let ([nargs (length lss)] )
+      (let loop ([lss lss]) 
+	;(display lss)(newline)
+	;(fresh ()
+	       ;;(conso la ld lss)
+	       (conde
+		[(for-eacho nullo lss)]
+		;;[(nullo la) ]
+		[(fresh (a d as ds)
+		    (mapo caro lss as)
+		    (mapo cdro lss ds)
+		    (applye-nargs fo as nargs)
+		    ;(apply fo as)
+		    ;(apply-macro fo as)
+		    ;fail
+		    ;(display (cons fo ds) )(newline)
+		    ;(apply ofor-each (cons fo ds))
+		    (loop ds)
+		    )
+	     ])))))
+
+;; (run* (q) 
+;;       (for-eache
+;;        ==
+;;        '(2 3 4)
+;;        q
+;;        ))
+
+;; (run* (q) 
+;;       (for-eache
+;;        (lambda (x y) 
+;;        ;; 	 ;(display (list 'l x y))(newline) 
+;;        ;; 	 ;fail
+;; 	 (== x y)
+;; 	 ) 
+;;        ;; ==
+;;        '(2 3 4)
+;;        q
+;;        ))
+
+
+;; (run* (q) 
+;;       (for-eache
+;;        nullo 
+;;        ;'(1 2 3)
+;;        '(() () ())
+;;        ))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+

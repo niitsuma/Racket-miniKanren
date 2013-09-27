@@ -29,6 +29,12 @@
 
 (define not-null? (compose not null?))
 
+
+(define-macro (aif test-form then-form . else-form)
+  `(let ((it ,test-form))
+     (if it ,then-form ,@else-form)))
+
+
 (define (tsrec rec [base identity] )
   (letrec ((self (lambda (trees)
 		   (if (cl:some atom? trees)
@@ -59,7 +65,7 @@
 
 ;---------
 
-;------- basic extension ----------
+;;------- basic extension ----------
 
 ;; ;(define var (lambda (dummy) (vector dummy)))
 ;; (define var (lambda (dummy) (vector (gensym dummy))))
@@ -93,11 +99,11 @@
    [(member x (dict-keys s)) => (lambda (l) (length l))]
    [else (dict-count s)]))
 
+;;------- basic extension end----------
 
-;---------
 
 
-;------- basic original function ----------
+;;------- basic original function begin ----------
 
 (define lhs (lambda (pr) (car pr)))
 (define rhs (lambda (pr) (cdr pr)))
@@ -137,16 +143,16 @@
           (let ((a^ a-inf)) e2))
          (else (let ((a (car a-inf)) (f (cdr a-inf))) 
                  e3)))))))
-(define take
+(define take_    ;;; rename take -> take_ 
   (lambda (n f)
     (cond
       ((and n (zero? n)) '())
       (else
        (case-inf (f)
          (() '())
-         ((f) (take n f))
+         ((f) (take_ n f))
          ((a) (cons a '()))
-         ((a f) (cons a (take (and n (- n 1)) f))))))))
+         ((a f) (cons a (take_ (and n (- n 1)) f))))))))
 
 (define empty-a '(() () ()))
 
@@ -364,10 +370,12 @@
 	 (cond 
 	  [(not s) #f]
 	  [(apply equal? it) s]
-
-	  [else	(set! s (left) )
-		(set! s (right) )
-		s ] )
+	  [else
+	   (aif (left)
+		(begin
+		  (set! s it) 
+		  (right) )
+		#f)] )
 
 	 (apply 
 	  (lambda (u v)
@@ -392,14 +400,7 @@
 ))
 
 
-
-
-
-
 (define unify unify-ons-trees)
-
-
-
 
 
 ;---------org code-------------------
@@ -901,7 +902,7 @@
 (define-syntax run
   (syntax-rules ()
     ((_ n (x) g0 g ...)
-     (take n
+     (take_ n
        (lambdaf@ ()
          ((fresh (x) g0 g ...
             (lambdag@ (final-a)
