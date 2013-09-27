@@ -12,6 +12,7 @@
 (require "../mk.rkt")
 (require "../miniKanren.scm")
 (require "image-util.scm")
+(require "bitmap-util.scm")
 
 ;; 8 x 8 small image size example
 (define width 8)
@@ -26,10 +27,11 @@
 ;;;Image_texture detectin
 
 
-;;base texutre pattern
+;;base texutre pattern ( 3 x 2 size image )
 (define base-pattern `((200 150 100) (100 50 0)))
+(gray-list-image-save-png base-pattern "base-pattern.png")
 
-;;The base texutre pattern fill image iteratively
+;; fill image with the base texutre pattern teratively
 (define lst-img
   (take  
    (apply 
@@ -54,23 +56,26 @@
  ;;  (100 50 0 100 50 0 100 50))
 
 
+
+
 ;; extract texutre pattern  from the image (lst-img)
- (run2 (q) 
+(define result
+  (run2 (q) 
 	(fresh (y)
 	 (truncated-circular-listo y lst-img)
 	 (mapo 
 	  (lambda (x o)
 	    (truncated-circular-listo o x) )
-	  y q)	  
-	 )
-	)
+	  y q) ) ) )
+result
 
 ;; >'(
 ;;   ((200 150 100) (100 50 0)) 
 ;;   ((200 150 100) (100 50 0 100 50 0))
 ;;   )
- 
-;; base texutre pattern extracted
+
+;; successfully the base texutre pattern detected! 
+
 
 
 ;; save image to file
@@ -78,15 +83,7 @@
 ;; list convert to byte-strings
 (define buffer 
   ;(make-bytes (* width height n-color)))  ;; alpha, red, green, blue
-  (list->bytes
-   (flatten     
-    (list-image->alpha-color-list-image
-     lst-img
-     )
-    )
-  )
-)
-
+  (list->bytes (flatten (list-image->alpha-color-list-image lst-img ))))
 
 ;;byte-strings convert to bitmap image
 
@@ -98,6 +95,7 @@
 
 ;;show image (on DrRacket)
 bm
+
 
 
 
