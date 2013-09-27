@@ -11,9 +11,9 @@
 
 (require "../mk.rkt")
 (require "../miniKanren.scm")
-;(require "../matchee.scm")
 (require "image-util.scm")
 
+;; image size is only 8 x 8
 (define width 8)
 (define height 8)
 (define n-color 4)
@@ -22,10 +22,14 @@
 (define bm (make-bitmap width height))
 (define dc (send bm make-dc))
 
+
 ;;;Image_texture detectin
 
+
+;;base texutre pattern
 (define base-pattern `((200 150 100) (100 50 0)))
 
+;;The base texutre pattern fill image iteratively
 (define lst-img
   (take  
    (apply 
@@ -37,7 +41,8 @@
     ) height)
  )
 
-;lst-img
+
+ ;;lst-img
  ;; > '(
  ;;  (200 150 100 200 150 100 200 150)
  ;;  (100 50 0 100 50 0 100 50)
@@ -48,6 +53,8 @@
  ;;  (200 150 100 200 150 100 200 150)
  ;;  (100 50 0 100 50 0 100 50))
 
+
+;; extract itexutre pattern  from mage : lst-image  
  (run2 (q) 
 	(fresh (y)
 	 (truncated-circular-listo y lst-img)
@@ -63,10 +70,12 @@
 ;;   ((200 150 100) (100 50 0 100 50 0))
 ;;   )
  
-;; base-pattern extracted
+;; base texutre pattern extracted
 
 
+;; save image to file
 
+;; list convert byte-strgins
 (define buffer 
   ;(make-bytes (* width height n-color)))  ;; alpha, red, green, blue
   (list->bytes
@@ -78,11 +87,13 @@
   )
 )
 
-;buffer
+
+;;byte-strgins convert to bitmap image
 
 (send dc set-argb-pixels 0 0 width height buffer)
 ;(send dc get-argb-pixels 0 0 width height buffer)
 
+;;save image
 (send bm save-file "rect2.png" 'png)
 
 

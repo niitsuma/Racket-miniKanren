@@ -2,17 +2,12 @@
 
 (require racket/draw)
 
-;; (require (only-in 
-;; 	  srfi/1
-;; 	  iota
-;; 	 ))
-
-;;(require unstable/sequence)
 (require "../mk.rkt")
 (require "../miniKanren.scm")
-(require "../matche.scm")
 (require "image-util.scm")
 
+
+;; image size is only 8 x 8
 (define width 8)
 (define height 8)
 (define n-color 4)
@@ -26,7 +21,7 @@
 (define bm (make-bitmap width height))
 (define dc (send bm make-dc))
 
-
+;;;drow image
 (define aquamarine (send the-color-database find-color "aquamarine"))
 (send dc set-brush "red" 'solid)
 (send dc set-pen  aquamarine 1 'solid)
@@ -34,19 +29,25 @@
 
 (send bm save-file "rect.png" 'png)
 
+
+;;covert bitmap image to list
 (define buffer (make-bytes (* width height n-color)))  ;; alpha, red, green, blue
 (send dc get-argb-pixels 0 0 width height buffer)
 
-
 (define lstimg  (n-color-bytes-image->list-image buffer width n-color) )
-;lstimg
 
 
 
 
+;;kvar-lst-img is a list which result shoud be stored 
 (define kvar-raster-lst-img  (map var (make-list (* width height) 1)))
 (define kvar-lst-img  (raster-list-image->list-image kvar-raster-lst-img width))
 
+;;; start 
+
+;; loop
+;; for i ( for j ( for di (for dj ....
+;; ==> ( build2e (sub1 height) (sub1 width)  ...   ( build2e 2 2 ....
 
  (run* (q)
       (build2e 
@@ -81,6 +82,11 @@
 (newline)
 
 
+;;Same and more compact description
+;; loop
+;; for i ( for j ( for di (for dj ....
+;; ==> (builde-nest (list (sub1 height) (sub1 width) 2 2) ...
+
  (run* (q) (builde-nest (list (sub1 height) (sub1 width) 2 2)
    (lambda (i j di dj) 
      (if (equal? (list-image-ref lstimg i j) (list-image-ref lstimg (+ i di) (+ j dj) ) )
@@ -89,6 +95,8 @@
    (== q kvar-lst-img))
 
 
+
+;;show image
 bm
 
 
