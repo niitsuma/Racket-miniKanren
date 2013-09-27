@@ -13,7 +13,7 @@
 (require "../miniKanren.scm")
 (require "image-util.scm")
 
-;; image size is only 8 x 8
+;; 8 x 8 small image size example
 (define width 8)
 (define height 8)
 (define n-color 4)
