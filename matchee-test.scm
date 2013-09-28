@@ -6,6 +6,19 @@
 (require "srfi-53.scm")
 (require "matchee.scm")
 
+(run* 
+ (q)     
+ (matchee
+  '((1 (2 3)) (10 (2 30)) (100 (2 300)))
+  [ 
+   ( (,a (2 ,b))  ___    )  ;; use ___ instead of ... : correspond to match pattern ( (,a (2 ,b))  ... )
+   (== q `(,a ,b))  ]
+  ))
+;> '(((1 10 100) (3 30 300)))
+
+
+
+
 (run1
  (q)     
  (matchee
@@ -13,6 +26,7 @@
   [(,x . ,r)  (== q  `(,x ,r) )]
   ))
 ;> '((1 (2 3)))
+;; Also can use as original matche
 
 
 (run* 
@@ -23,13 +37,5 @@
   ))
 ;> '((() (1 2 3)) ((1) (2 3)) ((1 2) (3)) ((1 2 3) ()))
 
-
-(run* 
- (q)     
- (matchee
-  '((1 (2 3)) (10 (2 30)) (100 (2 300)))
-  [ ( (,a (2 ,b))  ___    )  (== q `(,a ,b))  ]
-  ))
-;> '(((1 10 100) (3 30 300)))
-
+;; enumerate pattern
 
