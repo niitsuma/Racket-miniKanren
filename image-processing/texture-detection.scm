@@ -31,7 +31,7 @@
 (define base-pattern `((200 150 100) (100 50 0)))
 (gray-list-image-save-png base-pattern "base-pattern.png")
 
-;; fill image with the base texutre pattern teratively
+;; fill image with the base texutre pattern iteratively
 (define lst-img
   (take  
    (apply 
