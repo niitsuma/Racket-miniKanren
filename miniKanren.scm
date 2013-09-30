@@ -164,7 +164,7 @@
 	       (f m)
 	       (loop (add1 m)) ) )))
 
-
+;;;; usage 
 ;; (let ([vs (build-list 3 var)])
 ;;   (run* (q)
 ;; 	(builde
@@ -189,6 +189,7 @@
       (lambda (j)
 	(f i j))))))
    
+;;;; usage 
 ;; (let ([vs (build-list 6 var)])
 ;;   (run* 
 ;;    (q)
@@ -219,6 +220,7 @@
 	     (loop (cdr n-lst) (cons i i-lst))))))))
 
 
+;;;; usage 
 ;; (let ([vs (build-list 6 var)])
 ;;   (run* 
 ;;    (q)
@@ -247,6 +249,7 @@
           (fo a)
           (for-eacho fo d))])))
 
+;;;; usage 
 ;(run* (q) (for-eacho (lambda (x) (scm?->ck number? x)) '(1 2 3)))
 ;(run* (q) (for-eacho (lambda (x) (scm?->ck number? x)) '(1 2 a)))
 
@@ -261,25 +264,18 @@
   (lambda (fo . lss)
     (let ([nargs (length lss)] )
       (let loop ([lss lss]) 
-	;(display lss)(newline)
-	;(fresh ()
-	       ;;(conso la ld lss)
-	       (conde
-		[(for-eacho nullo lss)]
-		;;[(nullo la) ]
-		[(fresh (a d as ds)
-		    (mapo caro lss as)
-		    (mapo cdro lss ds)
-		    (applye-nargs fo as nargs)
-		    ;(apply fo as)
-		    ;(apply-macro fo as)
-		    ;fail
-		    ;(display (cons fo ds) )(newline)
-		    ;(apply ofor-each (cons fo ds))
-		    (loop ds)
-		    )
-	     ])))))
+	(conde
+	 [(for-eacho nullo lss)]
+	 [(fresh (a d as ds)
+		 (mapo caro lss as)
+		 (mapo cdro lss ds)
+		 (applye-nargs fo as nargs)
+		 (loop ds)
+		 )
+	  ])))))
 
+;;;; usage 
+;;
 ;; (run* (q) 
 ;;       (for-eache
 ;;        ==
@@ -290,11 +286,8 @@
 ;; (run* (q) 
 ;;       (for-eache
 ;;        (lambda (x y) 
-;;        ;; 	 ;(display (list 'l x y))(newline) 
-;;        ;; 	 ;fail
 ;; 	 (== x y)
 ;; 	 ) 
-;;        ;; ==
 ;;        '(2 3 4)
 ;;        q
 ;;        ))

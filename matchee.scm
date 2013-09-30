@@ -15,7 +15,6 @@
 
 (define-syntax-computation syntax-macthe-pat-refine
   (computation-rules (___  unquote )
-
     ((_ ( (h ___  . t) . (body ... )  ) )
      (syntax-do
       (hb1 <- (syntax-macthe-pat-refine  (h . (body ... )) ) )
@@ -26,8 +25,6 @@
       (t2 <- (syntax-car tb2))
       (vs <- (syntax-extract-unique-unquoted h1))
       (vs2 <- (syntax-extract-unique-unquoted t2 vs))
-
-
       (var <- (syntax-gensym))
       (var2 <- (syntax-gensym))
       (syntax-return	       
@@ -37,13 +34,7 @@
       			 (appendo var `t2 var2)
       			 (for-eache (lambda (var . vs )  (== `h var)) var . vs ) 
       			 . b2
-      			 )
-      			    )) 
-      	       )
-
-      ))
-
-
+      			 ))))))
 
     ((_ ( (h . t)  . ( body ... ) ) ) 
      (syntax-do 
@@ -82,7 +73,8 @@
     ( ( _ v ... )
       (non-syntax-macro-conpose-after
        (syntax-map syntax-macthe-pat-refine  (v ... ))
-		   apply-matche))))
+		   apply-matche  ;; this is just prepossessed macthe
+		   ))))
 
 
 
