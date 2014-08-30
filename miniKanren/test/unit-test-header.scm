@@ -8,3 +8,8 @@
 (require "../mk.rkt")
 (require "../miniKanren.scm")
 (require "../matche.scm")
+(require "../matchee.scm")
+
+;(require "mk.rkt")
+;(require "miniKanren.scm")
+;(require "matchee.scm")
