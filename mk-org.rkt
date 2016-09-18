@@ -1,109 +1,10 @@
 #lang racket
 
-
+(require "racket-compat.rkt")
 
 ;; all defined for now, but should avoid exporting
 ;; private functions later
 (provide (all-defined-out))
-
-(require "racket-compat.rkt")
-
-;; (require (only-in srfi/1
-;; 	 lset-intersection
-;; 	 lset-adjoin
-;; 	 ))
-(require racket/dict)
-(require mzlib/defmacro)
-
-;-------common lisp ----------
-(define (cl:some fn lst)
-  (for/or ((i lst))
-  (fn i)))
-
-(define atom? (compose not pair?))
-
-;---------
-
-;------- on lisp ----------
-(define not-null? (compose not null?))
-
-
-(define-macro (aif test-form then-form . else-form)
-  `(let ((it ,test-form))
-     (if it ,then-form ,@else-form)))
-
-
-(define (tsrec rec [base identity] )
-  (letrec ((self (lambda (trees)
-		   (if (cl:some atom? trees)
-		       (if (procedure? base)
-			   (apply base trees)
-			   base)
-		       (rec trees
-			    (lambda ()
-			      (self (map car trees)))
-			    (lambda ()
-			      (self (map cdr trees))))
-		       ))))
-    self))
-
-(define-macro (atsrec rec . base )
-  (if (null? base) (set! base 'it)
-      (set! base (car base)))
-    (let ((lfn (gensym)) (rfn (gensym)))
-      `(tsrec (lambda (it ,lfn ,rfn)
-               (letrec ((left (lambda () (,lfn)))
-                        (right (lambda () (,rfn))))
-                 ,rec))
-             (lambda it ,base))))
-
-(define-macro (ons-trees rec base trees)
-  `((atsrec ,rec ,base) trees))
-
-
-;---------
-
-;;------- basic extension ----------
-
-;; ;(define var (lambda (dummy) (vector dummy)))
-;; (define var (lambda (dummy) (vector (gensym dummy))))
-;; (define var? (lambda (x) (vector? x)))
-;; ;; (define var (lambda (dummy) (vector (gensym (format "~a" dummy)))))
-;; ;; (define var? (lambda (x) (vector? x)))
-
-(require srfi/9)
-(define-record-type *logical-variable*
-  (make-logical-variable name) logical-variable?
-  (name logical-variable-id))
-(define var  make-logical-variable)
-(define var? logical-variable?)
-
-
-(define (alist-tail-length x s)
-  (let ([a (assq x s)])
-    (if a (length (member a s)) 
-	(length s )
-	)))
-
-
-(define (dict?-has-key? s x)
-  (if s
-      (dict-has-key? s x)
-      #f))
-
-(define (dict-tail-length s x)
-  (cond 
-   [(member x (dict-keys s)) => (lambda (l) (length l))]
-   [else (dict-count s)]))
-
-;;------- basic extension end----------
-
-
-
-;;------- basic original function begin ----------
-
-(define lhs (lambda (pr) (car pr)))
-(define rhs (lambda (pr) (cdr pr)))
 
 (define a->s (lambda (a) (car a)))
 (define a->c* (lambda (a) (cadr a)))
@@ -140,41 +41,32 @@
           (let ((a^ a-inf)) e2))
          (else (let ((a (car a-inf)) (f (cdr a-inf))) 
                  e3)))))))
-(define take_    ;;; rename take -> take_ 
+(define take
   (lambda (n f)
     (cond
       ((and n (zero? n)) '())
       (else
        (case-inf (f)
          (() '())
-         ((f) (take_ n f))
+         ((f) (take n f))
          ((a) (cons a '()))
-         ((a f) (cons a (take_ (and n (- n 1)) f))))))))
+         ((a f) (cons a (take (and n (- n 1)) f))))))))
 
 (define empty-a '(() () ()))
-
-(define mplus
-  (lambda (a-inf f)
-    (case-inf a-inf
-      (() (f))
-      ((f^) (inc (mplus (f) f^)))
-      ((a) (choice a f))
-      ((a f^) (choice a (lambdaf@ () (mplus (f) f^)))))))
-
-
-(define bind
-  (lambda (a-inf g)
-    (case-inf a-inf
-      (() (mzero))
-      ((f) (inc (bind (f) g)))
-      ((a) (g a))
-      ((a f) (mplus (g a) (lambdaf@ () (bind (f) g)))))))
-
-
-(define-syntax bind*
+  
+(define-syntax run
   (syntax-rules ()
-    ((_ e) e)
-    ((_ e g0 g ...) (bind* (bind e g0) g ...))))
+    ((_ n (x) g0 g ...)
+     (take n
+       (lambdaf@ ()
+         ((fresh (x) g0 g ...
+            (lambdag@ (final-a)
+              (choice ((reify x) final-a) empty-f)))
+          empty-a))))))
+
+(define-syntax run*
+  (syntax-rules ()
+    ((_ (x) g ...) (run #f (x) g ...))))
 
 (define-syntax fresh
   (syntax-rules ()
@@ -184,11 +76,26 @@
          (let ((x (var 'x)) ...)
            (bind* (g0 a) g ...)))))))
 
-(define-syntax mplus*
+(define-syntax bind*
   (syntax-rules ()
     ((_ e) e)
-    ((_ e0 e ...) (mplus e0 
-                    (lambdaf@ () (mplus* e ...))))))
+    ((_ e g0 g ...) (bind* (bind e g0) g ...))))
+
+(define bind
+  (lambda (a-inf g)
+    (case-inf a-inf
+      (() (mzero))
+      ((f) (inc (bind (f) g)))
+      ((a) (g a))
+      ((a f) (mplus (g a) (lambdaf@ () (bind (f) g)))))))
+
+(define mplus
+  (lambda (a-inf f)
+    (case-inf a-inf
+      (() (f))
+      ((f^) (inc (mplus (f) f^)))
+      ((a) (choice a f))
+      ((a f^) (choice a (lambdaf@ () (mplus (f) f^)))))))
 
 (define-syntax conde
   (syntax-rules ()
@@ -199,6 +106,11 @@
            (bind* (g0 a) g ...)
            (bind* (g1 a) g^ ...) ...))))))
 
+(define-syntax mplus*
+  (syntax-rules ()
+    ((_ e) e)
+    ((_ e0 e ...) (mplus e0 
+                    (lambdaf@ () (mplus* e ...))))))
 
 (define pr-t->tag
   (lambda (pr-t)
@@ -208,190 +120,11 @@
   (lambda (pr-t)
     (cdr (rhs pr-t))))
 
-;---------
-
-
-;------- recurisive inside extension ----------
-
-(define (recursive-representation? l)  ;;faster (if (and (pair? l) (eq? (car l) '==>) (pair? (cdr l) ) (var? (cadr l) )) (cadr l)  #f)) 
-  (match  l
-   [`(==> ,x . ,rest) x ] ;;;better (if (var? x) x #f)
-   [_ #f]))
-
-(define (make-recursive-representation x x1 )
-  (list '==> x x1))
-
-(define (occurs-check x v s [valid-vars '()])
-  (cond 
-   [(eq? v x) #t]
-   [(member v valid-vars) #f]
-   [(dict-has-key? s v)
-    (if (var? v)
-	(occurs-check x (dict-ref s v) s (cons v valid-vars))
-	(occurs-check x (dict-ref s v) s valid-vars)
-	)]
-
-   [(recursive-representation? v) => 
-    (lambda (u)
-      (occurs-check x u s 
-		    (cons u valid-vars)
-		    )) ]
-
-   [(pair? v)
-    (or (occurs-check x (car v) s valid-vars)
-	(occurs-check x (cdr v) s valid-vars))]
-   [else #f]))
-
-(define (walk-circular-var? x s)
-  (let walk-circular-var2? ([x x] [s s] [result-pos (dict-tail-length s x)] [result x])
-    (cond
-     [(dict?-has-key? s x)
-      (let ([u (dict-ref s x)])
-	(if (var? u)
-	    (if (eq? u result) ;;when circular
-		result
-		(let ([u-pos (dict-tail-length s u)])
-		  (if ( > result-pos u-pos )
-		      (walk-circular-var2? u s u-pos u)
-		      (walk-circular-var2? u s result-pos result))))
-	      #f))]
-     [else #f] )))
-
-(define (walk-within-var x s)
-  (cond 
-   [(walk-circular-var? x s) => identity]
-   [(dict?-has-key? s x)
-     (let ([u (dict-ref s x)])
-       (if (var? u)
-	   (walk-within-var u s)
-	   x))]
-   [else x]))
-
-
-(define (walk x s)
-  (cond 
-   [(walk-circular-var? x s) => identity]
-   [(dict?-has-key? s x)
-    (let ([u (dict-ref s x)])
-      (if (var? u)
-	  (walk u s)
-	  u
-	  ))]
-   [else x]))
-
-(define (walk* v s  [valid-vars '()] [how-deal-recur make-recursive-representation] )
-  (let ([v (if (var? v) (walk-within-var v s) v)])
-    (cond
-     [(member v valid-vars) v]
-     [(dict?-has-key? s v)
-      (if (var? v)
-	  (cond
-	   [(walk-circular-var? v s) => identity]
-	   [else
-	    (let ([w (walk* (dict-ref s v) s (cons v valid-vars) how-deal-recur )])
-	      (if (occurs-check v w s) ;;contain v in expanded w using s ?
-		  (how-deal-recur v w) ;;`(==> ,v  ,w)
-		  w)) ] )
-	  v)]
-     [(pair? v)
-      (cons
-       (walk* (car v) s valid-vars how-deal-recur)
-       (walk* (cdr v) s valid-vars how-deal-recur))]
-     [else v])))
-
-(define (walk-simple* u s) (walk* u s '() (lambda (x y) x)))
-(define (walk-expand* u s) (walk* u s '() (lambda (x y) y)))
-
-
-(define (recursive?-var v s) 
-  (and (dict?-has-key? s v)  (occurs-check v (walk-simple* v s) s) )) 
-(define (recursive-var? v s) (and (var? v) (recursive?-var v s) ) )
-
-
-(define (unify-single-var u v s);; u should var
-  (if s
-  (if (dict?-has-key? s u) 
-      (if 
-       (recursive?-var u s) 
-	  (if (var? v)
-	      (if (dict?-has-key? s v)
-		  (if 
-		   (recursive?-var v s) 
-		      (unify
-		       (walk-expand* u s)
-		       (walk-expand* v s)
-		       (cons `(,u . ,v) s))
-		      #f)
-		  (cons `(,v . ,u) s) )
-	      (if (pair? v)
-		  (unify
-		   (walk-expand* u s)
-		   v
-		   s)
-		  #f
-		  )
-	      )
-	  #f 
-	  )
-      (cons `(,u . ,v) s))
-      #f
-      )
-)
-
-
-(define (unify u v s)
-
-  (let* ([u1 (walk-simple* u s)] 
-	 [v1 (walk-simple* v s)]
-	 [trees (list u1 v1)])
-
-      (ons-trees
-	 (cond 
-	  [(not s) #f]
-	  [(apply equal? it) s]
-	  [else
-	   (aif (left)
-		(begin
-		  (set! s it) 
-		  (right) )
-		#f)] )
-
-	 (apply 
-	  (lambda (u v)
-	    (cond
-	     [(eq? u v) s]
-	     [(var? u)
-	      (unify-single-var u v s)
-
-	      ]
-	     [(var? v)
-	      (unify-single-var v u s)
-
-	      ]
-	     [(equal? u v) s]
-
-	     [else #f]
-	     ))
-	  it)
-	 
-	 trees
-	 )
-))
-
-
-
-
-;---------org code-------------------
-
-;; (define valid?
-;;   (lambda (x v s)
-;;     (not (occurs-check x v s))))
-
-
-
-  
-
-
+(define noo
+  (lambda (tag u)
+    (let ((pred (lambda (x) (not (eq? x tag)))))
+      (lambdag@ (a : s c* t)
+        (noo-aux tag u pred a s c* t)))))
 
 (define noo-aux
   (lambda (tag u pred a s c* t)
@@ -419,13 +152,6 @@
                   (unit (subsume-t s c* t0)))))
              (else (unit a)))))
         (else (mzero))))))
-
-(define noo
-  (lambda (tag u)
-    (let ((pred (lambda (x) (not (eq? x tag)))))
-      (lambdag@ (a : s c* t)
-        (noo-aux tag u pred a s c* t)))))
-
 
 (define make-flat-tag
   (lambda (tag pred)
@@ -574,6 +300,11 @@
                     ((not ((pr-t->pred pr-t) u)))
                     (else #f)))))))))))
 
+(define booleano
+  (lambda (x)
+    (conde
+      ((== #f x))
+      ((== #t x)))))
 
 (define symbolo (make-flat-tag 'sym symbol?))
 
@@ -670,26 +401,65 @@
 
 (define fail (== #f #t))
 
-(define booleano
-  (lambda (x)
-    (conde
-      ((== #f x))
-      ((== #t x)))))
+(define var (lambda (dummy) (vector dummy)))
+(define var? (lambda (x) (vector? x)))
+(define lhs (lambda (pr) (car pr)))
+(define rhs (lambda (pr) (cdr pr)))
 
+(define walk
+  (lambda (x s)
+    (let ((a (assq x s)))
+      (cond
+        (a (let ((u (rhs a)))
+             (if (var? u) (walk u s) u)))
+        (else x)))))
 
+(define walk*
+  (lambda (v s)
+    (let ((v (if (var? v) (walk v s) v)))
+      (cond
+        ((var? v) v)
+        ((pair? v)
+         (cons (walk* (car v) s) (walk* (cdr v) s)))
+        (else v)))))
 
+(define unify
+  (lambda (u v s)
+    (let ((u (if (var? u) (walk u s) u))
+          (v (if (var? v) (walk v s) v)))
+      (cond
+        ((and (pair? u) (pair? v))
+         (let ((s (unify (car u) (car v) s)))
+           (and s
+             (unify (cdr u) (cdr v) s))))
+        (else (unify-nonpair u v s))))))
 
+(define unify-nonpair
+  (lambda (u v s)
+    (cond
+      ((eq? u v) s)      
+      ((var? u)
+       (and (or (not (pair? v)) (valid? u v s))
+         (cons `(,u . ,v) s)))
+      ((var? v)
+       (and (or (not (pair? u)) (valid? v u s))
+         (cons `(,v . ,u) s)))
+      ((equal? u v) s)
+      (else #f))))
 
+(define valid?
+  (lambda (x v s)
+    (not (occurs-check x v s))))
 
-
-
-
-
-(define reify-name
-  (lambda (n)
-    (string->symbol
-      (string-append "_" "." (number->string n)))))
-
+(define occurs-check
+  (lambda (x v s)
+    (let ((v (if (var? v) (walk v s) v)))
+      (cond
+        ((var? v) (eq? v x))
+        ((pair? v) 
+         (or (occurs-check x (car v) s)
+             (occurs-check x (cdr v) s)))
+        (else #f)))))  
 
 (define reify-s
   (lambda (v)
@@ -705,6 +475,10 @@
              (reify-s (cdr v) r)))
           (else r))))))
 
+(define reify-name
+  (lambda (n)
+    (string->symbol
+      (string-append "_" "." (number->string n)))))
 
 (define reify
   (lambda (x)
@@ -722,7 +496,6 @@
                 (var? (walk (lhs pr) r)))
               t)))))))
 
-
 (define reify-aux
   (lambda (r v c* t)
     (let ((v (walk* v r))
@@ -734,16 +507,8 @@
                     (partition* t)))))
         (cond
           ((and (null? c*) (null? p*)) v)
-          ((null? c*) 
-	   ;; `(,v . ,p*)
-	   `(,v : . ,p*)
-	   )
-          (else 
-	   ;; `(,v (=/= . ,c*) . ,p*)
-	   `(,v : (=/= . ,c*) . ,p*)
-	   ))))))
-
-
+          ((null? c*) `(,v . ,p*))
+          (else `(,v (=/= . ,c*) . ,p*)))))))
 
 (define sorter
   (lambda (ls)
@@ -869,56 +634,3 @@
          ((a f) (bind* (unit a) g ...)))))))
 
 (define onceo (lambda (g) (condu (g))))
-
-
-(define-syntax run
-  (syntax-rules ()
-    ((_ n (x) g0 g ...)
-     (take_ n
-       (lambdaf@ ()
-         ((fresh (x) g0 g ...
-            (lambdag@ (final-a)
-              (choice ((reify x) final-a) empty-f)))
-          empty-a))))))
-
-(define-syntax run*
-  (syntax-rules ()
-    ((_ (x) g ...) (run #f (x) g ...))))
-
-
-
-
-;------- util extension ----------
-(define (varo v)
-  (lambdag@ (a : s c* t)
-    (cond
-      [(var? v) (unit a) ]
-      [else  (mzero) ])))
-
-
-
-(define (recursive-varo v)
-  (lambdag@ (a : s c* t)
-    (cond
-      [(recursive-var? v s)
-       (unit a)]
-      [else  
-       (mzero)])))
-
-
-(define (non-unified-varo v)
-  (lambdag@ (a : s c* t)
-    (cond
-      [(dict?-has-key? s v) (mzero) ]
-      [else (unit a) ])))
-
-(define (unified-varo v)
-  (lambdag@ (a : s c* t)
-    (cond
-      [(dict?-has-key? s v) (unit a) ]
-      [else  (mzero) ])))
-
-
-
-
-;---------
