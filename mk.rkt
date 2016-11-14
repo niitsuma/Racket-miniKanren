@@ -91,9 +91,9 @@
       (dict-has-key? s x)
       #f))
 
-(define (dict-tail-length s x)
+(define (dict-tail-length s x) ;;example 4=(dict-tail-length '((a . 10) (b . 20) (b . 25)  (c 30) (d 40)) 'b)  
   (cond 
-   [(member x (dict-keys s)) => (lambda (l) (length l))]
+   [(member x (dict-keys s)) => (lambda (l) (length l))] ;;length to tail from x in association list s 
    [else (dict-count s)]))
 
 ;;------- basic extension end----------
@@ -221,7 +221,7 @@
 (define (make-recursive-representation x x1 )
   (list '==> x x1))
 
-(define (occurs-check x v s [valid-vars '()])
+(define (occurs-check x v s [valid-vars '()]) ;;contain x in expanded v using s ?
   (cond 
    [(eq? v x) #t]
    [(member v valid-vars) #f]
@@ -250,9 +250,9 @@
 	(if (var? u)
 	    (if (eq? u result) ;;when circular
 		result
-		(let ([u-pos (dict-tail-length s u)])
+		(let ([u-pos (dict-tail-length s u)]) ;; u-pos = stack depth of u in s
 		  (if ( > result-pos u-pos )
-		      (walk-circular-var2? u s u-pos u)
+		      (walk-circular-var2? u s u-pos u) ;; reset stack depth of u in s to u-pos and then search u (not x) in s again
 		      (walk-circular-var2? u s result-pos result))))
 	      #f))]
      [else #f] )))

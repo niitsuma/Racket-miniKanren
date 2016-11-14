@@ -137,6 +137,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(define containo
+  (lambda (x l)
+    (conde      
+      ((fresh (a)
+	      (caro l a)
+	      (== a x)))
+      ((fresh (c d)
+	      (conso c d l)
+	      (conde
+	       [ (containo x c)]
+	       [ (containo x d)]
+	       ))))))
+
+
+(define-syntax excludee
+  (syntax-rules ()
+    ((_ pred b1 ...)
+     (condu
+      [pred fail]
+      [alwayso b1 ...]))))
+
 (define (circular-listo x o) (appendo x o o))
 (define (truncated-circular-listo x o)
   (fresh (y z)
