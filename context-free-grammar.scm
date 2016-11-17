@@ -60,6 +60,7 @@
      )))
 
 
+
 (define (cfg1 sent tree)
    (matchee
     sent
@@ -69,29 +70,31 @@
     [(,pre ___ (P . ,x) (NP . ,y) . ,post)
      (fresh (t1)
      (appendo pre `( (PP (P . ,x) (NP . ,y) ) . ,post)  t1)
-     (cfg t1 tree))  ]
+     (cfg1 t1 tree))  ]
 
      [(,pre ___ (Det . ,x) (N . ,y) . ,post)
       (fresh (t1)
        (appendo pre `( (NP (Det . ,x) (N . ,y) ) . ,post)  t1)
-       (cfg t1 tree))  ]
+       (cfg1 t1 tree))  ]
      
      [(,pre ___ (Det . ,x) (N . ,y) (PP . ,z) . ,post)
       (fresh (t1)
-        (excludee (containo 'elephant `(,x ,y ,z))
-	  (excludee (containo 'pajamas `(,x ,y ,z))
-            (appendo pre `( (NP (Det . ,x) (N . ,y) (PP . ,z)  ) . ,post)  t1)
-             (cfg t1 tree))))  ]
+       (excludee
+	(fresh ()
+	 (containo 'elephant `(,x ,y ,z))
+	 (containo 'pajamas `(,x ,y ,z)))
+        (appendo pre `( (NP (Det . ,x) (N . ,y) (PP . ,z)  ) . ,post)  t1)
+          (cfg1 t1 tree)))  ]
     
     [(,pre ___ (V . ,x) (NP . ,y) . ,post)
      (fresh (t1)
        (appendo pre `( (VP (V . ,x) (NP . ,y) ) . ,post)  t1)
-       (cfg t1 tree))  ]
+       (cfg1 t1 tree))  ]
     
     [(,pre ___ (VP . ,x) (PP . ,y) . ,post)
      (fresh (t1)
      (appendo pre `( (VP (VP . ,x) (PP . ,y) ) . ,post)  t1)
-     (cfg t1 tree))  ]
+     (cfg1 t1 tree))  ]
    ))
 
 
